@@ -1,0 +1,171 @@
+# Copyright 2003-2007 Antonio G. Muñoz Conejo <antoniogmc (AT) gmail.com>
+# Distributed under the terms of the GNU General Public License v2
+#
+# pkgbuilder script for packages with multi file build
+#
+
+inherit configscript
+
+multi_init() {
+    configscript_init
+}
+
+multi_do_fetch() {
+    local retval
+    local iter
+    for iter in $PKG_ITER ; do
+        if declare -f do_fetch_$iter &> /dev/null ; then
+            do_init_$iter
+            do_fetch_$iter
+            retval="$?"
+
+            test retval || break
+        else
+            do_init_${iter}
+            pkg_fetchfiles
+            retval="$?"
+
+            test retval || break
+        fi
+    done
+
+    return $retval
+}
+
+multi_do_verify() {
+    local sum="$PKG_HOME/files/md5sum-$PKG_VERSION"
+
+    local retval
+    local iter
+    for iter in $PKG_ITER ; do
+        do_init_$iter
+        verify $PKG_SRC $sum
+        retval="$?"
+
+        test retval || break
+    done
+
+    return $retval
+}
+
+multi_do_unpack() {
+    local retval
+    local iter
+    for iter in $PKG_ITER ; do
+        if declare -f do_unpack_$iter &> /dev/null ; then
+            do_init_$iter
+            do_unpack_$iter
+            retval="$?"
+
+            test retval || break
+        else
+            do_init_$iter
+            configscript_do_unpack
+            retval="$?"
+
+            test retval || break
+        fi
+    done
+
+    return $retval
+}
+
+multi_do_patch() {
+    local retval
+    local iter
+    for iter in $PKG_ITER ; do
+        if declare -f do_patch_$iter &> /dev/null ; then
+            do_init_$iter
+            do_patch_$iter
+            retval="$?"
+
+            test retval || break
+        fi
+    done
+
+    return $retval
+}
+
+multi_do_configure() {
+    local retval
+    local iter
+    for iter in $PKG_ITER ; do
+        if declare -f do_configure_$iter &> /dev/null ; then
+            do_init_$iter
+            do_configure_$iter
+            retval="$?"
+
+            test retval || break
+        else
+            do_init_$iter
+            configscript_do_configure
+            retval="$?"
+
+            test retval || break
+        fi
+    done
+
+    return $retval
+}
+
+multi_do_build() {
+    local retval
+    local iter
+    for iter in $PKG_ITER ; do
+        if declare -f do_build_$iter &> /dev/null ; then
+            do_init_$iter
+            do_build_$iter
+            retval="$?"
+
+            test retval || break
+        else
+            do_init_$iter
+            configscript_do_build
+            retval="$?"
+
+            test retval || break
+        fi
+    done
+
+    return $retval
+}
+
+multi_do_install() {
+    local retval
+    local iter
+    for iter in $PKG_ITER ; do
+        if declare -f do_install_$iter &> /dev/null ; then
+            do_init_$iter
+            do_install_$iter
+            retval="$?"
+
+            test retval || break
+        fi
+    done
+
+    return $retval
+}
+
+multi_do_postinstall() {
+    local retval
+    local iter
+    for iter in $PKG_ITER ; do
+        if declare -f do_postinstall_$iter &> /dev/null ; then
+            do_init_$iter
+            do_postinstall_$iter
+            retval="$?"
+
+            test retval || break
+        fi
+    done
+
+    return $retval
+}
+
+multi_do_cleanup() {
+    local iter
+    for iter in $PKG_ITER ; do
+        do_init_$iter
+        pkg_do_cleanup
+    done
+}

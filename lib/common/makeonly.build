@@ -1,0 +1,31 @@
+# Copyright 2003-2007 Antonio G. Muñoz Conejo <antoniogmc (AT) gmail.com>
+# Distributed under the terms of the GNU General Public License v2
+#
+# pkgbuilder script for packages with configure script
+#
+
+inherit main
+
+makeonly_init() {
+    main_init
+}
+
+makeonly_do_unpack() {
+    main_do_unpack
+}
+
+makeonly_do_build() {
+    cd $PKG_SRC
+
+    pkg_build
+
+    return $?
+}
+
+makeonly_do_install() {
+    main_do_install
+}
+
+makeonly_do_postinstall() {
+    main_do_postinstall
+}

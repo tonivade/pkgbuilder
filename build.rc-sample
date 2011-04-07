@@ -1,0 +1,84 @@
+# Copyright 2003-2007 Antonio G. Muñoz <antoniogmc (AT) gmail.com>
+# Distributed under the terms of the GNU General Public License v2
+
+# script tree location
+PKGBUILDER_HOME="/var/pkg"
+
+# libs location
+PKGBUILDER_LIBS="/usr/lib/pkgbuilder"
+
+# Packages db directory
+PACKAGES_LOGDIR="/var/log/packages"
+
+# PkgBuilder ftp mirror
+PKGBUILDER_MIRROR="ftp://ftp.berlios.de/pub/pkgbuilder"
+
+# PkgBuilder rsync mirror
+RSYNC_MIRROR="rsync://ftp.berlios.de/pkgbuilder"
+
+# Slackware ftp mirror
+SLACKWARE_MIRROR="ftp://ftp.slackware.no/pub/linux/slackware/slackware-12.0"
+
+# Local network source code mirror
+#MIRROR_URL="ftp://localhost/pub/pkgbuilder"
+
+# CDROM with source code
+#CDROM_DIR="/mnt/cdrom"
+
+# Fetch options
+FETCH_TRIES="5"
+FETCH_DIR="/var/cache/pkg/sources"
+FETCH_OPTIONS="--tries=$FETCH_TRIES --output-document=$FETCH_DIR/%o"
+FETCH_FTP_OPTIONS="--passive-ftp"
+FETCH_HTTPS_OPTIONS="--no-check-certificate"
+
+# Binary packages directory
+BINARIES_DIR="/var/cache/pkg/binaries"
+
+# Current packages directory
+CURRENT_DIR="/var/cache/pkg/current"
+#CURRENT_MIRROR_URL="ftp://localhost/pub/slackware"
+CURRENT_FETCH_OPTIONS="--tries=$FETCH_TRIES --output-document=$CURRENT_DIR/%o"
+
+# Temporal directory
+TMP="/var/tmp"
+
+# USE flags
+USE_AUDIO="alsa oss arts esd oggvorbis speex lame mad flac fame mikmod gstreamer"
+USE_VIDEO="X opengl dvd divx mpeg win32codecs sdl libcaca aalib svga fbcon directfb"
+USE_NET="samba ssl slp maildir apache"
+USE_PRINT="cups pnm2ppa"
+USE_XLIBS="motif gtk gtk2 qt kde gnome"
+USE_LIBS="ncurses readline sasl bidi jpeg png tiff gif slang fam wmf gdbm berkdb truetype"
+USE_CPU="mmx sse 3dnow"
+USE_DEV="python tcltk perl java ruby scheme"
+USE_MISC="nls doc gpm javascript mysql xml sane crypto tetex unicode server"
+
+USE="$USE $USE_AUDIO $USE_VIDEO $USE_NET $USE_PRINT
+     $USE_XLIBS $USE_LIBS $USE_CPU $USE_DEV $USE_MISC"
+
+OPTIONS="strip doc"
+
+# Blacklist of no upgradeable packages
+#NOUPGRADE="swig amule"
+
+# I18N configuration
+#I18N="es"
+
+# Parallel compilation. Use with care, some packages compilation fails.
+#COMPILATION="parallel"
+#DISTCC_HOSTS="host1 host2 host3 hostn"
+#CCACHE_PREFIX="distcc"
+#MAKE_OPTIONS="-j8"
+
+# CPU and ARCHITECTURE flags configuration
+ARCH="i486"
+CPU="i686"
+CFLAGS="-O2 -march=$ARCH -mtune=$CPU"
+CXXFLAGS="$CFLAGS"
+CPPFLAGS="$CFLAGS"
+
+# Packager info
+#PACKAGER_NAME="John Smith"
+#PACKAGER_EMAIL="jsmith AT example.net"
+#PACKAGER_INITIALS="js"

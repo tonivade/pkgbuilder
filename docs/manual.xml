@@ -1,0 +1,489 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN"
+"http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd" [
+<!ENTITY basepkgs SYSTEM "base-packages.xml">
+<!ENTITY application "PkgBuilder">
+]>
+ 
+<book lang="es"><?dbhtml filename="manual.html" ?>
+    <title>Manual de &application;</title>
+    <bookinfo>
+        <author>
+            <firstname>Antonio</firstname>
+            <surname>Muñoz</surname>
+        </author>
+        <copyright>
+            <year>2007</year>
+            <holder>Antonio Muñoz</holder>
+        </copyright>
+        <revhistory>
+            <revision>
+                <revnumber>0.1</revnumber>
+                <date>2007-10-27</date>
+                <revremark>Versión inicial</revremark>
+            </revision>
+        </revhistory>
+    </bookinfo>
+    <abstract>
+        <para>
+            Descripción general, guia de usuario y de desarrollo
+        </para>
+    </abstract>
+    <preface id="motivation"><?dbhtml filename="motivation.html" ?>
+        <title>¿Por qué &application;?</title>
+        <para>
+            Los motivos por los que nace &application; son varios pero el principal 
+            es la escasez de paquetes oficiales que existen en Slackware, multitud 
+            de paquetes que no se incluyen en la distribución oficial de Slackware, 
+            tan básicos como pueden ser gkrellm, wine, o postfix. Buscando solucionar 
+            esto intenté migrar a otras distribuciones de GNU/Linux o incluso migrar 
+            a otros sistemas operativos libres como NetBSD pero no encontré nada que 
+            se ajustara a lo que buscaba. Lo que buscaba era un sistema que me 
+            permitiera crear paquetes para Slackware a partir de los fuentes sin 
+            tenerme que preocupar de nada salvo de ejecutar unos sencillos comandos, 
+            que resolviera dependencias automaticamente y que compilara los paquetes 
+            optimizados para mi sistema. Asi que decidí ponerme manos a la obra.
+        </para>
+    </preface>
+    <chapter id="description"><?dbhtml filename="description.html" ?>
+        <title>Descripción General</title>
+        <para>
+            &application; es un sistema para automatizar la creación de paquetes similar 
+            a los ports de los sistemas BSD. La intención inicial es que funcione en 
+            cualquier distribución y/o cualquier sistema de paquetes, pero por ahora 
+            solo soporta Slackware, que es la distribución que uso.
+        </para>
+        <para>
+            Su funcionamiento es muy simple: se descarga el código fuente desde la web 
+            oficial del desarrollador, después verifica el checksum de los archivos 
+            descargados, descomprime los archivos y les aplica los parches correspondientes, 
+            luego se realiza la compilación del paquete y la creación del tgz.
+        </para>
+        <para>
+            Todo esto está gobernado por una serie de sencillos scripts escritos en 
+            shell script. Por cada paquete existe un script para cada versión del 
+            paquete y en él se configuran las variables necesarias para la compilación 
+            y creación del paquete y se implementan una serie de métodos, uno por cada 
+            acción. Dentro de cada uno de esos métodos está la implementación de la 
+            acción para ese paquete.
+        </para>
+    </chapter>
+    <chapter id="requirements"><?dbhtml filename="requirements.html" ?>
+        <title>Requisitos</title>
+        <section id="operating-system"><?dbhtml filename="requirements-1.html"?>
+            <title>Sistema Operativo</title>
+            <para>
+                El sistema se basa sobre Slackware 10.0, instalando sólo una serie de 
+                paquetes básicos sobre los que construir el resto del sistema. Para 
+                la mayoría de paquetes que contiene &application; existe un paquete oficial 
+                compatible en Slackware, asi que se puede optar por instalar el paquete 
+                oficial en lugar del paquete de &application;, aunque no todos, de hecho,
+                algunos son totalmente incompatibles, como puede ser el paquete oggutils 
+                y los paquetes libao, libogg y libvorbis de &application;.
+            </para>
+            <para>
+                El sistema deberá tener tamaño libre suficiente para almacenar los 
+                archivos de código fuente descargados, los paquetes binarios creados 
+                y también tamaño suficiente para la compilación de cada paquete. Los 
+                archivos descargados se pueden eliminar sin problemas y los paquetes 
+                binarios generados también para liberar espacio en disco.
+            </para>
+        </section>
+        <section id="base-packages"><?dbhtml filename="requirements-2.html"?>
+            <title>Paquetes Básicos</title>
+            <para>
+                Esta es la lista de paquetes de Slackware 10.0 necesarios para el 
+                sistema base. Algunos de ellos son opcionales como jfsutils o xfsprogs, 
+                estos serán necesarios si el sistema se va instalar en una partición 
+                con el sistema de ficheros jfs o xfs, respectivamente.
+            </para>
+            &basepkgs;
+        </section>
+    </chapter>
+    <chapter id="installation"><?dbhtml filename="installation.html"?>
+        <title>Instalación</title>
+        <section id="from-cdrom"><?dbhtml filename="installation-1.html"?>
+            <title>Instalación desde CDROM</title>
+            <para>
+                La instalación del sistema base es totalmente similar a una instalación 
+                usual de Slackware. Se seleccionarán para su instalación unicamente los 
+                paquetes indicados en la lista de paquetes básicos.
+            </para>
+        </section>
+        <section id="from-slackware"><?dbhtml filename="installation-2.html"?>
+            <title>Instalación desde una instalación previa de Slackware</title>
+            <para>
+                Para este tipo de instalación es necesario tener instalado previamente 
+                un sistema GNU/Linux completo.
+            </para>
+            <section id="partitions">
+                <title>Creación y formateo de particiones</title>
+                <para>
+                    Primero debemos crear las particiones donde vamos a instalar el 
+                    sistema en el que vamos a utilizar &application;. Podemos utilizar 
+                    cualquier programa para ello como el clasico fdisk. Luego debemos 
+                    formatear las particiones utilizando el sistema de ficheros que 
+                    más nos guste. Y por fin, las montamos bajo /mnt/pkgbuilder, por 
+                    ejemplo.
+                </para>
+                <screen>
+                    <prompt># </prompt><userinput>mkdir /mnt/pkgbuilder</userinput>
+                    <prompt># </prompt><userinput>mkreiserfs /dev/sda7</userinput>
+                    <prompt># </prompt><userinput>mount /dev/sda7 /mnt/pkgbuilder</userinput>
+                </screen>
+            </section>
+            <section id="pkgs-installation">
+                <title>Instalación de los paquetes básicos</title>
+                <para>
+                    Después ya podemos instalar los paquetes que previamente hemos 
+                    debido descargar y los instalamos con el comando:
+                </para>
+                <screen>
+                    <prompt># </prompt><userinput>installpkg -root /mnt/pkgbuilder -menu *.tgz</userinput>
+                </screen>
+            </section>
+            <section id="enter-chroot">
+                <title>Entrando en entorno chroot</title>
+                <para>
+                    Ahora para entrar dentro del nuevo sistema debemos hacer chroot 
+                    sobre el directorio en el que hemos instalado los paquetes con 
+                    esta secuencia de comandos:
+                </para>
+                <screen>
+                    <prompt># </prompt><userinput>chroot /mnt/pkgbuilder ldconfig</userinput>
+                    <prompt># </prompt><userinput>mount -t proc proc /mnt/pkgbuilder/proc</userinput>
+                    <prompt># </prompt><userinput>mount -t sysfs none /mnt/pkgbuilder/sys</userinput>
+                    <prompt># </prompt><userinput>chroot /mnt/pkgbuilder mount -t devpts none /dev/pts</userinput>
+                    <prompt># </prompt><userinput>chroot /mnt/pkgbuilder mount -t tmpfs none /dev/shm</userinput>
+                    <prompt># </prompt><userinput>chroot /mnt/pkgbuilder</userinput>
+                    <prompt># </prompt><userinput>. /etc/profile</userinput>
+                </screen>
+            </section>
+            <section id="kernel-build">
+                <title>Compilar el kernel</title>
+                <para>
+                    Si necesitamos un kernel hecho a nuestra medida ahora es el 
+                    momento de compilarlo. Por supuesto, siempre podemos utilizar 
+                    el que trae por defecto Slackware.
+                </para>
+            </section>
+            <section id="system-configuration">
+                <title>Configuración del sistema</title>
+                <para>
+                    Ahora es el momento de configurar el sistema. Para ello, una vez 
+                    dentro del sistema chroot, ejecutamos pkgtool y seleccionamos la 
+                    opción Setup. Nos aparecerá una lista de scripts de configuración 
+                    de los que seleccionaremos los que nos interesen.
+                </para>
+                <variablelist>
+                    <varlistentry>
+                        <term>install-kernel</term>
+                        <listitem>
+                            <para>
+                                Si queremos instalar un kernel diferente al que viene 
+                                de serie.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>make-bootdisk</term>
+                        <listitem>
+                            <para>
+                                Si queremos crear un disco de arranque.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>modem-device</term>
+                        <listitem>
+                            <para>
+                                Si tenemos un modem y queremos configurarlo.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>lilo-config</term>
+                        <listitem>
+                            <para>
+                                Desde aqui configuraremos lilo para poder arrancar
+                                más tarde el nuevo sistema.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>netconfig</term>
+                        <listitem>
+                            <para>
+                                Nos permite configurar nuestra conexión de red.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>services</term>
+                        <listitem>
+                            <para>
+                                Nos permite activar y desactivar servicios en el arranque.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>setconsolefont</term>
+                        <listitem>
+                            <para>
+                                Si queremos cambiar la fuente por defecto de la consola.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                    <varlistentry>
+                        <term>timeconfig</term>
+                        <listitem>
+                            <para>
+                                Nos permite configurar la zona horaria.
+                            </para>
+                        </listitem>
+                    </varlistentry>
+                </variablelist>
+            </section>
+            <section id="fstab-file">
+                <title>Creación del fichero fstab</title>
+                <para>Esto no es más que un ejemplo</para>
+                <example>
+                    <title>Ejemplo de fichero /etc/fstab</title>
+                    <programlisting>
+    /dev/sda2   swap        swap        defaults                0 0
+
+    /dev/sda6   /           reiserfs    defaults                1 1
+    /dev/sda1   /tmp        reiserfs    defaults                1 2
+    /dev/sda8   /home       reiserfs    defaults                1 2
+
+    /dev/hdc    /mnt/cdrw   iso9660     noauto,ro,user          0 0
+    /dev/hdd    /mnt/cdrom  iso9660     noauto,ro,user          0 0
+    /dev/fd0    /mnt/floppy auto        noauto,user             0 0
+
+    devpts      /dev/pts    devpts      gid=5,mode=620          0 0
+    proc        /proc       proc        defaults                0 0
+    none        /sys        sysfs       defaults                0 0
+                    </programlisting>
+                </example>
+            </section>
+            <para>
+                Y ya lo tenemos instalado. Solo nos queda arrancar desde él e instalar 
+                &application;.
+            </para>
+        </section>
+        <section id="pkgbuilder-install"><?dbhtml filename="installation-3.html"?>
+            <title>Instalación de &application;</title>
+            <para>
+                Para instalar &application; es necesario primero conseguir una copia 
+                del arbol de ports. Se puede descargar un tarball de la página oficial 
+                o se puede descargar directamente a traves de Subversion. Yo 
+                recomiendo instalarlo a traves de Subversion ya que esto permitirá 
+                ir actualizando &application; fácilmente.
+            </para>
+            <section id="tarball-install">
+                <title>Instalación desde archivo tar</title>
+                <para>
+                    Simplemente será necesario descomprimir el tarball en el lugar elejido.
+                </para>
+            </section>
+            <section id="svn-install">
+                <title>Instalación desde Subversion</title>
+                <para>
+                    La instalación a traves de Subversion requiere instalar una 
+                    serie de paquetes extra. Estos paquetes son neon y subversion. 
+                    Se pueden encontrar estos paquetes precompilados en el ftp 
+                    anonimo de &application; o también se pueden crear utilizando 
+                    &application; desde el tar ball disponible en la web del proyecto.
+                </para>
+                <para>
+                    El comando que descargar la última version de &application; es 
+                    muy sencillo:
+                </para>
+                <screen>
+                    <prompt>$ </prompt><userinput>svn checkout svn://svn.berlios.de/pkgbuilder/trunk/pkgbuilder</userinput>
+                </screen>
+                <para>
+                    Y ya tendremos nuestra copia del arbol de ports.
+                </para>
+            </section>
+        </section>
+        <section id="configuration"><?dbhtml filename="installation-4.html"?>
+            <title>Configuración de &application;</title>
+            <para>
+                Después de obtener una copia de &application; hay que configurar el 
+                archivo build.rc. Existe un archivo con un ejemplo del archivo de 
+                configuración, se trata de build.rc-sample.
+            </para>
+            <example>
+                <title>Ejemplo de fichero de configuración build.rc</title>
+                <programlisting><![CDATA[
+    # Copyright 2003-2007 Antonio G. Muñoz <antoniogmc (AT) gmail.com>
+    # Distributed under the terms of the GNU General Public License v2
+
+    PKGBUILDER_HOME="/var/pkg"
+
+    PKGBUILDER_LIBS="/usr/lib/pkgbuilder"
+
+    # Packages db directory
+    PACKAGES_LOGDIR="/var/log/packages"
+
+    # &application; mirror
+    PKGBUILDER_MIRROR="ftp://ftp.berlios.de/pub/pkgbuilder"
+
+    # Slackware mirror
+    SLACKWARE_MIRROR="ftp://ftp.slackware.no/pub/linux/slackware/slackware-12.0"
+
+    # Local network source code mirror
+    #MIRROR_URL="ftp://localhost/pub/pkgbuilder"
+
+    # CDROM with source code
+    #CDROM_DIR="/mnt/cdrom"
+
+    # Fetch options
+    FETCH_TRIES="5"
+    FETCH_DIR="/var/cache/pkg/sources"
+    FETCH_OPTIONS="--tries=$FETCH_TRIES --output-document=$FETCH_DIR/%o"
+    FETCH_FTP_OPTIONS="--passive-ftp"
+    FETCH_HTTPS_OPTIONS="--no-check-certificate"
+
+    # Binary packages directory
+    BINARIES_DIR="/var/cache/pkg/binaries"
+
+    # Current packages directory
+    CURRENT_DIR="/var/cache/pkg/current"
+    #CURRENT_MIRROR_URL="ftp://localhost/pub/slackware"
+    CURRENT_FETCH_OPTIONS="--tries=$FETCH_TRIES --output-document=$CURRENT_DIR/%o"
+
+    # Temporal directory
+    TMP="/var/tmp"
+
+    # USE flags
+    USE_AUDIO="alsa oss arts esd oggvorbis speex lame mad flac fame mikmod gstreamer"
+    USE_VIDEO="X opengl dvd divx mpeg win32codecs sdl libcaca aalib svga fbcon directfb"
+    USE_NET="samba ssl slp maildir apache"
+    USE_PRINT="cups pnm2ppa"
+    USE_XLIBS="motif gtk gtk2 qt kde gnome"
+    USE_LIBS="ncurses readline sasl bidi jpeg png tiff gif slang fam wmf gdbm berkdb truetype"
+    USE_CPU="mmx sse 3dnow"
+    USE_DEV="python tcltk perl java ruby scheme"
+    USE_MISC="nls doc gpm javascript mysql xml sane crypto tetex unicode server"
+
+    USE="$USE $USE_AUDIO $USE_VIDEO $USE_NET $USE_PRINT
+         $USE_XLIBS $USE_LIBS $USE_CPU $USE_DEV $USE_MISC"
+
+    OPTIONS="strip doc"
+
+    # Blacklist of no upgradeable packages
+    #NOUPGRADE="swig amule"
+
+    # I18N configuration
+    #I18N="es"
+
+    # Parallel compilation. Use with care, some packages compilation fails.
+    #COMPILATION="parallel"
+    #DISTCC_HOSTS="host1 host2 host3 hostn"
+    #CCACHE_PREFIX="distcc"
+    #MAKE_OPTIONS="-j8"
+
+    # CPU and ARCHITECTURE flags configuration
+    ARCH="i486"
+    CPU="i686"
+    CFLAGS="-O2 -march=$ARCH -mtune=$CPU"
+    CXXFLAGS="$CFLAGS"
+    CPPFLAGS="$CFLAGS"
+
+    # Packager info
+    #PACKAGER_NAME="John Smith"
+    #PACKAGER_EMAIL="jsmith AT example.net"
+    #PACKAGER_INITIALS="js"]]>
+                </programlisting>
+            </example>
+            <para>
+                Una breve descripción de algunas de las variables de configuración.
+            </para>
+            <variablelist>
+                <varlistentry>
+                    <term>PKGBUILDER_HOME</term>
+                    <listitem>
+                        <para>
+                            Configura el directorio donde se ha instalado &application;.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>PKGBUILDER_LIBS</term>
+                    <listitem>
+                        <para>
+                            Configura el directorio donde se han instalado las 
+                            librerías de &application;.
+                        </para>
+                    </listitem>
+                </varlistentry>
+                <varlistentry>
+                    <term>PACKAGES_LOGDIR</term>
+                    <listitem>
+                        <para>
+                            configura el directorio donde se encuentra la base de 
+                            datos de paquetes instalados. Usualmente toma el valor 
+                            de /var/log/packages.
+                        </para>
+                    </listitem>
+                </varlistentry>
+            </variablelist>
+        </section>
+    </chapter>
+    <chapter id="user-manual"><?dbhtml filename="user-manual.html" ?>
+        <title>Empieza la fiesta</title>
+        <section id="pkg_sync.sh"><?dbhtml filename="user-manual-1.html"?>
+            <title>El script pkg_sync.sh</title>
+        </section>
+        <section id="pkg_createdb.sh"><?dbhtml filename="user-manual-3.html"?>
+            <title>El script pkg_createdb.sh</title>
+        </section>
+        <section id="pkg_build.sh"><?dbhtml filename="user-manual-4.html"?>
+            <title>El script pkg_build.sh</title>
+        </section>
+        <section id="pkg_install.sh"><?dbhtml filename="user-manual-5.html"?>
+            <title>El script pkg_install.sh</title>
+        </section>
+        <section id="pkg_upgrade.sh"><?dbhtml filename="user-manual-6.html"?>
+            <title>El script pkg_upgrade.sh</title>
+        </section>
+        <section id="pkg_query.sh"><?dbhtml filename="user-manual-7.html"?>
+            <title>El script pkg_query.sh</title>
+        </section>
+    </chapter>
+    <chapter id="devel-manual"><?dbhtml filename="devel-manual.html" ?>
+        <title>Creación de scripts .build</title>
+        <section id="script-description"><?dbhtml filename="devel-manual-1.html" ?>
+            <title>Anatomía de un script .build</title>
+            <para>
+                Un script build define una serie de variables y métodos que dirigen 
+                la generación de un paquete. Además un script build puede heredar 
+                de otro ciertas caracteristicas que se repiten en múltiples paquetes.
+            </para>
+            <section id="variables">
+                <title>Variables</title>
+            </section>
+            <section id="actions">
+                <title>Acciones</title>
+            </section>
+        </section>
+        <section id="script-inheritance"><?dbhtml filename="devel-manual-2.html" ?>
+            <title>Esquema de herencia</title>
+        </section>
+        <section id="script-functions"><?dbhtml filename="devel-manual-3.html" ?>
+            <title>Funciones genericas</title>
+        </section>
+        <section id="script-pkgfunctions"><?dbhtml filename="devel-manual-4.html" ?>
+            <title>Funciones de paquete</title>
+        </section>
+        <section id="script-writing"><?dbhtml filename="devel-manual-5.html" ?>
+            <title>Cómo escribir un script .build</title>
+        </section>
+    </chapter>
+</book>
+
+<!--
+    vim:set ts=4 sw=4 enc=utf8:
+-->

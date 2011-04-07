@@ -1,0 +1,39 @@
+# Copyright 2003-2007 Antonio G. Muñoz Conejo <antoniogmc (AT) gmail.com>
+# Distributed under the terms of the GNU General Public License v2
+#
+# main pkgbuilder script
+#
+
+main_init() {
+    PKG_ARCH="${ARCH/-/}"
+
+    PKG_PREFIX="/usr"
+    PKG_BUILD_OPTIONS=""
+    PKG_BUILD_TARGET=""
+    PKG_INSTALL_OPTIONS="DESTDIR=$PKG_DEST"
+    PKG_INSTALL_TARGET="install"
+}
+
+main_do_unpack() {
+    mkdir -p $PKG_UNPACK && cd $PKG_UNPACK
+    
+    pkg_unpack
+    
+    return $?
+}
+
+main_do_install() {
+    cd $PKG_SRC
+
+    pkg_install
+
+    return $?
+}
+
+main_do_postinstall() {
+    cd $PKG_DEST
+
+    pkg_postinstall
+
+    return $?
+}

@@ -1,0 +1,128 @@
+# Copyright 2003-2007 Antonio G. Muñoz Conejo <antoniogmc (AT) gmail.com>
+# Distributed under the terms of the GNU General Public License v2
+#
+# base pkgbuilder script
+#
+
+# whereis the package home?
+
+if echo $PKG | grep -q '^/' ; then
+    PKG_HOME="`dirname $PKG`"
+else
+    PKG_HOME="`pwd`/`dirname $PKG`"
+fi
+
+# basic variables declaration
+PKG_BASENAME="`basename $PKG .build`"
+
+PKG_NAME="`extract_name "$PKG_BASENAME"`"
+
+PKG_VERSION="`extract_version "$PKG_BASENAME"`"
+
+PKG_TMP="$TMP/$PKG_BASENAME"
+PKG_UNPACK="$PKG_TMP/src"
+PKG_SRC="$PKG_UNPACK/$PKG_BASENAME"
+PKG_DEST="$PKG_TMP/pkg"
+PKG_DOC="$PKG_DEST/usr/doc/$PKG_BASENAME"
+PKG_FILES="$PKG_HOME/files"
+
+# basic functions
+pkg_do_info() {
+    echo
+    echo "$PKG_BASENAME-$PKG_BUILD"
+    echo
+    echo "HOME......... $PKG_HOMESITE"
+    if [ "$PKG_URL" != "" ] ; then
+        echo "URL.......... $PKG_URL"
+    fi
+    echo "LICENSE...... $PKG_LICENSE"
+    if [ "$PKG_USE" != "" ] ; then
+        local activedflags="`pkg_activedflags`"
+        echo "USE..........$activedflags"
+    fi
+    if [ "$PKG_DEPENDS" != "" ] ; then
+        echo "DEPS......... $PKG_DEPENDS"
+    fi
+    if [ "$PKG_BUILD_DEPENDS" != "" ] ; then
+        echo "BUILD DEPS... $PKG_BUILD_DEPENDS"
+    fi
+    if [ -f $PKG_HOME/files/slack-desc ] ; then
+        echo
+        echo "DESCRIPTION:"
+        echo
+        cat $PKG_HOME/files/slack-desc | grep "^$PKG_NAME" | cut -d: -f2,3,4,5 | uniq
+    fi
+}
+
+pkg_do_fetch() {
+    pkg_fetchfiles
+    
+    return $?
+}
+
+pkg_do_verify() {
+    local md5sum="md5sum-$PKG_VERSION"
+    local sha1sum="sha1sum-$PKG_VERSION"
+    
+    pkg_verify $md5sum || return $?
+    pkg_verify $sha1sum || return $?
+}
+
+pkg_do_buildpkg() {
+    cd $PKG_DEST
+    
+    if [ "$PKG_ARCH" = "" ] ; then
+        $PKG_ARCH="${ARCH/-/}"
+    fi
+
+    if [ ! -d $BINARIES_DIR ] ; then
+        mkdir -p $BINARIES_DIR
+    fi
+    
+    if [ "$PACKAGER_INITIALS" = "" ] ; then
+        makepkg -l y -c n $BINARIES_DIR/$PKG_NAME-$PKG_VERSION-${PKG_ARCH/-/}-$PKG_BUILD.tgz
+    else
+        makepkg -l y -c n $BINARIES_DIR/$PKG_NAME-$PKG_VERSION-${PKG_ARCH/-/}-$PKG_BUILD$PACKAGER_INITIALS.tgz
+    fi
+    
+    return $?
+}
+
+pkg_do_installpkg() {
+    cd $BINARIES_DIR
+    
+    if [ "$PKG_ARCH" = "" ] ; then
+        $PKG_ARCH="${ARCH/-/}"
+    fi
+    
+    if [ "$PACKAGER_INITIALS" = "" ] ; then
+        installpkg $PKG_NAME-$PKG_VERSION-${PKG_ARCH/-/}-$PKG_BUILD.tgz
+    else
+        installpkg $PKG_NAME-$PKG_VERSION-${PKG_ARCH/-/}-$PKG_BUILD$PACKAGER_INITIALS.tgz
+    fi
+    
+    return $?
+}
+
+pkg_do_upgradepkg() {
+    cd $BINARIES_DIR
+    
+    if [ "$PKG_ARCH" = "" ] ; then
+        $PKG_ARCH="${ARCH/-/}"
+    fi
+    
+    if [ "$PACKAGER_INITIALS" = "" ] ; then
+        upgradepkg --install-new $PKG_NAME-$PKG_VERSION-${PKG_ARCH/-/}-$PKG_BUILD.tgz
+    else
+        upgradepkg --install-new $PKG_NAME-$PKG_VERSION-${PKG_ARCH/-/}-$PKG_BUILD$PACKAGER_INITIALS.tgz
+    fi
+    
+    return $?
+}
+
+pkg_do_cleanup() {
+    if [ -d $PKG_TMP ] ; then
+        rm -rf $PKG_TMP
+    fi
+}
+
